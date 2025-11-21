@@ -30,6 +30,8 @@ Thumbs.db
 # Large dataset (don't upload to git)
 dataset/
 
-# Keep model weights (important for deployment)
-# If model is too large (>100MB), use Git LFS or cloud storage
-# runs/detect/train/weights/best.pt
+# Exclude epoch weights (keep only best.pt and last.pt)
+runs/detect/train/weights/epoch*.pt
+
+# Exclude large training batches
+runs/detect/train/train_batch*.jpg

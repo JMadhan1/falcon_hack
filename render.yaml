@@ -3,7 +3,7 @@ services:
     name: space-station-safety
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: streamlit run app.py --server.port=$PORT --server.address=0.0.0.0
+    startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.0

@@ -1,109 +1,101 @@
-import streamlit as st
-from ultralytics import YOLO
+import os
 import cv2
 import numpy as np
+import base64
+from flask import Flask, render_template, request, jsonify
+from ultralytics import YOLO
 from PIL import Image
-import tempfile
-import os
+import io
 
-# Page config
-st.set_page_config(
-    page_title="Space Station Safety Detector",
-    page_icon="🚀",
-    layout="wide"
-)
+app = Flask(__name__)
 
-# Title and Description
-st.title("🚀 Space Station Safety Object Detection")
-st.markdown("""
-This application uses YOLOv8 to detect safety equipment in the International Space Station (ISS).
-Upload an image to detect objects like:
-- Oxygen Tanks
-- Nitrogen Tanks
-- First Aid Boxes
-- Fire Alarms
-- Safety Switch Panels
-- Emergency Phones
-- Fire Extinguishers
-""")
+# Configuration
+MODEL_PATH = 'runs/detect/train/weights/best.pt'
+UPLOAD_FOLDER = 'static/uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Sidebar
-st.sidebar.header("Model Configuration")
-confidence_threshold = st.sidebar.slider(
-    "Confidence Threshold",
-    min_value=0.0,
-    max_value=1.0,
-    value=0.25,
-    step=0.05
-)
-
-# Load Model
-@st.cache_resource
-def load_model():
-    model_path = 'runs/detect/train/weights/best.pt'
-    if not os.path.exists(model_path):
-        st.error(f"Model not found at {model_path}. Please ensure the model is trained and the weights are available.")
-        return None
-    return YOLO(model_path)
-
+# Load Model Globaly
+print("📦 Loading YOLOv8 Model...")
 try:
-    model = load_model()
+    if os.path.exists(MODEL_PATH):
+        model = YOLO(MODEL_PATH)
+        print("✅ Model loaded successfully!")
+    else:
+        print(f"❌ Model not found at {MODEL_PATH}")
+        model = None
 except Exception as e:
-    st.error(f"Error loading model: {e}")
+    print(f"❌ Error loading model: {e}")
     model = None
 
-# Main Interface
-uploaded_file = st.file_uploader("Choose an image...", type=['jpg', 'jpeg', 'png'])
+def get_image_base64(image_path):
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode('utf-8')
 
-if uploaded_file is not None and model is not None:
-    # Create two columns
-    col1, col2 = st.columns(2)
-    
-    # Display original image
-    image = Image.open(uploaded_file)
-    with col1:
-        st.subheader("Original Image")
-        st.image(image, use_container_width=True)
-    
-    # Run inference
-    if st.button("Detect Objects", type="primary"):
-        with st.spinner("Running detection..."):
-            # Convert PIL Image to numpy array
-            img_array = np.array(image)
-            
-            # Run prediction
-            results = model.predict(
-                source=img_array,
-                conf=confidence_threshold
-            )
-            
-            # Plot results
-            res_plotted = results[0].plot()
-            
-            # Display result
-            with col2:
-                st.subheader("Detected Objects")
-                st.image(res_plotted, use_container_width=True)
-            
-            # Show detections table
-            st.subheader("Detailed Detections")
-            
-            detections = []
-            for box in results[0].boxes:
-                cls = int(box.cls[0])
-                conf = float(box.conf[0])
-                name = results[0].names[cls]
-                detections.append({
-                    "Object": name,
-                    "Confidence": f"{conf:.2%}",
-                    "Coordinates": f"[{box.xyxy[0][0]:.1f}, {box.xyxy[0][1]:.1f}, {box.xyxy[0][2]:.1f}, {box.xyxy[0][3]:.1f}]"
-                })
-            
-            if detections:
-                st.table(detections)
-            else:
-                st.info("No objects detected with current confidence threshold.")
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-# Footer
-st.markdown("---")
-st.markdown("Built for Duality AI Space Station Challenge #2")
+@app.route('/detect', methods=['POST'])
+def detect():
+    if not model:
+        return jsonify({'error': 'Model not loaded'}), 500
+    
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+        
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    try:
+        # Read image
+        img_bytes = file.read()
+        img = Image.open(io.BytesIO(img_bytes))
+        img_np = np.array(img)
+
+        # Run inference
+        results = model.predict(img_np, conf=0.25)
+        
+        # Process results
+        result = results[0]
+        
+        # Get detections
+        detections = []
+        for box in result.boxes:
+            cls_id = int(box.cls[0])
+            conf = float(box.conf[0])
+            name = result.names[cls_id]
+            
+            detections.append({
+                'class': name,
+                'confidence': f"{conf:.1%}",
+                'bbox': box.xyxy[0].tolist()
+            })
+
+        # Plot results on image
+        res_plotted = result.plot()
+        res_img = Image.fromarray(res_plotted[..., ::-1]) # RGB to BGR fix if needed, but plot() usually returns BGR for cv2 or RGB? Ultralytics plot() returns BGR numpy array.
+        # Actually ultralytics plot() returns a numpy array in BGR (OpenCV format). 
+        # We need to convert it to RGB for PIL or just encode it as JPEG.
+        
+        # Convert BGR to RGB for PIL
+        res_plotted_rgb = cv2.cvtColor(res_plotted, cv2.COLOR_BGR2RGB)
+        res_pil = Image.fromarray(res_plotted_rgb)
+        
+        # Save to buffer
+        buffered = io.BytesIO()
+        res_pil.save(buffered, format="JPEG")
+        img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+        return jsonify({
+            'success': True,
+            'image': img_str,
+            'detections': detections
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
