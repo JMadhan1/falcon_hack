@@ -23,7 +23,7 @@ body {
     color: var(--text-main);
     min-height: 100vh;
     overflow-x: hidden;
-    background-image: 
+    background-image:
         radial-gradient(circle at 10% 20%, rgba(79, 70, 229, 0.15) 0%, transparent 20%),
         radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.15) 0%, transparent 20%);
 }
@@ -83,7 +83,7 @@ header {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
 .upload-zone {
@@ -93,11 +93,12 @@ header {
     position: relative;
     transition: all 0.3s ease;
     overflow: hidden;
-    background: rgba(255,255,255,0.02);
+    background: rgba(255, 255, 255, 0.02);
     cursor: pointer;
 }
 
-.upload-zone:hover, .upload-zone.dragover {
+.upload-zone:hover,
+.upload-zone.dragover {
     border-color: var(--primary);
     background: rgba(79, 70, 229, 0.05);
 }
@@ -141,7 +142,7 @@ header {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0, 0, 0, 0.6);
     border: none;
     color: white;
     width: 32px;
@@ -195,7 +196,7 @@ header {
     min-height: 400px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
 .empty-state {
@@ -239,7 +240,7 @@ header {
 }
 
 .stats-panel {
-    background: rgba(255,255,255,0.03);
+    background: rgba(255, 255, 255, 0.03);
     border-radius: 16px;
     padding: 1.5rem;
 }
@@ -262,7 +263,7 @@ header {
 }
 
 .stat-item {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.05);
     padding: 0.8rem;
     border-radius: 8px;
     border-left: 3px solid var(--accent);
@@ -320,13 +321,25 @@ header {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Responsive */
@@ -334,7 +347,7 @@ header {
     .app-interface {
         grid-template-columns: 1fr;
     }
-    
+
     .upload-section {
         min-height: 300px;
     }
@@ -350,4 +363,171 @@ footer {
 footer a {
     color: var(--accent);
     text-decoration: none;
+}
+
+/* Additions for Modals and New Buttons */
+
+.secondary-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text-main);
+    border-color: var(--text-main);
+}
+
+.outline-btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.outline-btn:hover {
+    background: rgba(6, 182, 212, 0.1);
+}
+
+.feedback-section {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.feedback-prompt {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: var(--bg-panel);
+    margin: 10% auto;
+    padding: 2rem;
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    width: 90%;
+    max-width: 600px;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    animation: fadeInDown 0.4s ease-out;
+}
+
+.close-modal {
+    color: var(--text-muted);
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-modal:hover,
+.close-modal:focus {
+    color: var(--text-main);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Falcon Workflow Styles */
+.falcon-workflow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.step {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+.step-icon {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.step h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-main);
+}
+
+.step p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* Form Styles */
+#feedback-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+select,
+textarea {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border);
+    padding: 1rem;
+    border-radius: 12px;
+    color: var(--text-main);
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+}
+
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+@media (max-width: 600px) {
+    .falcon-workflow {
+        grid-template-columns: 1fr;
+    }
 }

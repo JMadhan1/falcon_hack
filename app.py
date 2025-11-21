@@ -6,13 +6,17 @@ from flask import Flask, render_template, request, jsonify
 from ultralytics import YOLO
 from PIL import Image
 import io
+import json
+from datetime import datetime
 
 app = Flask(__name__)
 
 # Configuration
 MODEL_PATH = 'runs/detect/train/weights/best.pt'
 UPLOAD_FOLDER = 'static/uploads'
+FEEDBACK_FOLDER = 'feedback_data'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(FEEDBACK_FOLDER, exist_ok=True)
 
 # Load Model Globaly
 print("📦 Loading YOLOv8 Model...")
@@ -26,10 +30,6 @@ try:
 except Exception as e:
     print(f"❌ Error loading model: {e}")
     model = None
-
-def get_image_base64(image_path):
-    with open(image_path, "rb") as img_file:
-        return base64.b64encode(img_file.read()).decode('utf-8')
 
 @app.route('/')
 def index():
@@ -55,11 +55,9 @@ def detect():
 
         # Run inference
         results = model.predict(img_np, conf=0.25)
-        
-        # Process results
         result = results[0]
         
-        # Get detections
+        # Process detections
         detections = []
         for box in result.boxes:
             cls_id = int(box.cls[0])
@@ -72,27 +70,57 @@ def detect():
                 'bbox': box.xyxy[0].tolist()
             })
 
-        # Plot results on image
+        # Convert plot to base64
         res_plotted = result.plot()
-        res_img = Image.fromarray(res_plotted[..., ::-1]) # RGB to BGR fix if needed, but plot() usually returns BGR for cv2 or RGB? Ultralytics plot() returns BGR numpy array.
-        # Actually ultralytics plot() returns a numpy array in BGR (OpenCV format). 
-        # We need to convert it to RGB for PIL or just encode it as JPEG.
-        
-        # Convert BGR to RGB for PIL
         res_plotted_rgb = cv2.cvtColor(res_plotted, cv2.COLOR_BGR2RGB)
         res_pil = Image.fromarray(res_plotted_rgb)
         
-        # Save to buffer
         buffered = io.BytesIO()
         res_pil.save(buffered, format="JPEG")
         img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
+        
+        # Save original image temporarily for feedback reference
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{timestamp}_query.jpg"
+        img.save(os.path.join(UPLOAD_FOLDER, filename))
 
         return jsonify({
             'success': True,
             'image': img_str,
-            'detections': detections
+            'detections': detections,
+            'image_id': filename
         })
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/feedback', methods=['POST'])
+def feedback():
+    """
+    Endpoint to collect user feedback for Continuous Learning.
+    This simulates sending data back to Falcon for retraining.
+    """
+    try:
+        data = request.json
+        image_id = data.get('image_id')
+        correct_class = data.get('correct_class')
+        notes = data.get('notes')
+        
+        # In a real scenario, this would upload to S3 or Duality's API
+        # Here we save metadata locally
+        feedback_entry = {
+            'image_id': image_id,
+            'timestamp': datetime.now().isoformat(),
+            'user_correction': correct_class,
+            'notes': notes,
+            'status': 'queued_for_falcon_retraining'
+        }
+        
+        with open(os.path.join(FEEDBACK_FOLDER, 'feedback_log.json'), 'a') as f:
+            f.write(json.dumps(feedback_entry) + '\n')
+            
+        return jsonify({'success': True, 'message': 'Feedback received. Data queued for Falcon retraining loop.'})
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

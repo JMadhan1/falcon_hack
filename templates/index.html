@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,9 +11,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
     <div class="background-overlay"></div>
-    
+
     <main class="container">
         <header>
             <div class="logo">
@@ -20,6 +22,9 @@
                 <h1>ISS Safety<span class="accent">Net</span></h1>
             </div>
             <p class="subtitle">Advanced AI Object Detection for Space Station Safety Equipment</p>
+            <button id="falcon-info-btn" class="secondary-btn">
+                <i class="fa-solid fa-infinity"></i> How Falcon Maintains This Model
+            </button>
         </header>
 
         <div class="app-interface">
@@ -37,7 +42,7 @@
                         <button id="remove-btn" class="icon-btn"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 </div>
-                
+
                 <button id="detect-btn" class="primary-btn" disabled>
                     <span>Analyze Image</span>
                     <i class="fa-solid fa-radar"></i>
@@ -56,15 +61,22 @@
                         <img id="result-image" src="" alt="Detection Result">
                         <div class="scan-overlay"></div>
                     </div>
-                    
+
                     <div class="stats-panel">
                         <h3><i class="fa-solid fa-list-check"></i> Detections</h3>
                         <div class="stats-list" id="stats-list">
                             <!-- Stats items will be injected here -->
                         </div>
+
+                        <div class="feedback-section">
+                            <p class="feedback-prompt">Incorrect detection?</p>
+                            <button id="report-btn" class="outline-btn">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Report Issue to Falcon
+                            </button>
+                        </div>
                     </div>
                 </div>
-                
+
                 <div class="empty-state" id="empty-state">
                     <i class="fa-solid fa-microchip"></i>
                     <p>AI Ready. Upload an image to begin analysis.</p>
@@ -73,10 +85,70 @@
         </div>
     </main>
 
+    <!-- Falcon Info Modal -->
+    <div id="falcon-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2><i class="fa-solid fa-infinity"></i> Continuous Learning with Falcon</h2>
+            <div class="falcon-workflow">
+                <div class="step">
+                    <div class="step-icon"><i class="fa-solid fa-eye"></i></div>
+                    <h3>1. Detect & Monitor</h3>
+                    <p>The app detects objects in real-time. If a new object variant (e.g., a new fire extinguisher
+                        design) appears and confidence is low, it's flagged.</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon"><i class="fa-solid fa-upload"></i></div>
+                    <h3>2. Data Loop</h3>
+                    <p>Users report issues via the "Report Issue" button. This data is securely sent back to the Falcon
+                        platform.</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon"><i class="fa-solid fa-dna"></i></div>
+                    <h3>3. Digital Twin</h3>
+                    <p>Falcon uses the reported image to generate thousands of synthetic variations (Digital Twins) in
+                        Duality's simulation environment.</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon"><i class="fa-solid fa-rotate"></i></div>
+                    <h3>4. Retrain & Deploy</h3>
+                    <p>The model is retrained on this new synthetic data and automatically redeployed to this app,
+                        closing the loop.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Report Detection Issue</h2>
+            <p>Help Falcon learn! What was actually in the image?</p>
+            <form id="feedback-form">
+                <select id="feedback-class" required>
+                    <option value="" disabled selected>Select correct object...</option>
+                    <option value="OxygenTank">Oxygen Tank</option>
+                    <option value="NitrogenTank">Nitrogen Tank</option>
+                    <option value="FirstAidBox">First Aid Box</option>
+                    <option value="FireAlarm">Fire Alarm</option>
+                    <option value="SafetySwitchPanel">Safety Switch Panel</option>
+                    <option value="EmergencyPhone">Emergency Phone</option>
+                    <option value="FireExtinguisher">Fire Extinguisher</option>
+                    <option value="Other">Other / New Object</option>
+                </select>
+                <textarea id="feedback-notes"
+                    placeholder="Describe the issue (e.g., 'Occluded by hand', 'New model type')..."></textarea>
+                <button type="submit" class="primary-btn">Submit Feedback</button>
+            </form>
+        </div>
+    </div>
+
     <footer>
         <p>Powered by YOLOv8 & Duality AI • <a href="#">View Documentation</a></p>
     </footer>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
+
 </html>

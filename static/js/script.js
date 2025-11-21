@@ -11,7 +11,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultImage = document.getElementById('result-image');
     const statsList = document.getElementById('stats-list');
 
+    // New Elements
+    const falconInfoBtn = document.getElementById('falcon-info-btn');
+    const falconModal = document.getElementById('falcon-modal');
+    const reportBtn = document.getElementById('report-btn');
+    const feedbackModal = document.getElementById('feedback-modal');
+    const feedbackForm = document.getElementById('feedback-form');
+    const closeModals = document.querySelectorAll('.close-modal');
+
     let currentFile = null;
+    let currentImageId = null;
+
+    // Modal Handlers
+    falconInfoBtn.addEventListener('click', () => falconModal.style.display = 'block');
+    reportBtn.addEventListener('click', () => feedbackModal.style.display = 'block');
+
+    closeModals.forEach(btn => {
+        btn.addEventListener('click', () => {
+            falconModal.style.display = 'none';
+            feedbackModal.style.display = 'none';
+        });
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target == falconModal) falconModal.style.display = 'none';
+        if (e.target == feedbackModal) feedbackModal.style.display = 'none';
+    });
 
     // Drag & Drop Handlers
     dropZone.addEventListener('click', (e) => {
@@ -73,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetUpload() {
         currentFile = null;
+        currentImageId = null;
         fileInput.value = '';
         previewContainer.style.display = 'none';
         detectBtn.disabled = true;
@@ -103,6 +129,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(data.error);
             }
 
+            // Store image ID for feedback
+            currentImageId = data.image_id;
+
             // Update Results
             resultImage.src = `data:image/jpeg;base64,${data.image}`;
 
@@ -132,6 +161,40 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             loader.style.display = 'none';
             detectBtn.disabled = false;
+        }
+    });
+
+    // Feedback Form Handler
+    feedbackForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const correctClass = document.getElementById('feedback-class').value;
+        const notes = document.getElementById('feedback-notes').value;
+
+        try {
+            const response = await fetch('/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image_id: currentImageId,
+                    correct_class: correctClass,
+                    notes: notes
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert('Thank you! Your feedback has been sent to Falcon for model improvement.');
+                feedbackModal.style.display = 'none';
+                feedbackForm.reset();
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (error) {
+            alert('Error sending feedback: ' + error.message);
         }
     });
 });
