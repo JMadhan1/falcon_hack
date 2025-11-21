@@ -1,0 +1,9 @@
+# YOLO Dataset Configuration - Duality AI Space Station Challenge #2
+path: ./dataset
+train: train/images
+val: val/images
+test: test/images
+
+# Classes - Space Station Safety Objects
+nc: 7
+names: ['OxygenTank', 'NitrogenTank', 'FirstAidBox', 'FireAlarm', 'SafetySwitchPanel', 'EmergencyPhone', 'FireExtinguisher']
